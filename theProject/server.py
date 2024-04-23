@@ -13,22 +13,28 @@ server.listen()
 print("Listening")
 has_controller = False
 def handle_connection(conn, addr):
-    unsorted = True
-    while unsorted:
-        msg = conn.recv(64).decode(ENCODING)
-        if msg.startswith("type: "):
-            if msg == "type: controller":
-                if has_controller == False:
-
-
+	unsorted = True
+	while unsorted:
+		msg = conn.recv(64).decode(ENCODING)
+		if msg.startswith("type: "):
+			if msg == "type: controller":
+				if has_controller == False:
+					unsorted = False
+					handle_controller(conn, addr)a
+			else:
+				unsorted = False
+				handle_client(conn, addr)
+				
+				
+				
 def handle_controller(conn, addr):
-    raise NotImplementedError
-
+	raise NotImplementedError
+	
 def handle_client(conn, addr):
-    raise NotImplementedError
-
+	raise NotImplementedError
+	
 running = True
 while running:
-    conn, addr = server.accept()
-    c = threading.Thread(target=handle_connection, args=(conn, addr))
-    c.start()
+	conn, addr = server.accept()
+	c = threading.Thread(target=handle_connection, args=(conn, addr))
+	c.start()
