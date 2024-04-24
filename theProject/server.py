@@ -64,14 +64,16 @@ def handle_controller(conn, addr):
                 try:
                     cmd_length = int(data[15:])
                 except ValueError as e:
-                    conn.send("error".encode(ENCODING))
+                    conn.send("comand error".encode(ENCODING))
                     continue
-                conn.send("OK")
+                conn.send("command ok")
                 command = conn.recv(cmd_length).decode(ENCODING)
-                controller_active_client[0].send(f"command length {str(cmd_length)}".encode(ENCODING))
-                response = controller_active_client[0].recv(1024)
-                if response == "OK":
-                    controller_active_client[0].send(command.encode(ENCODING))
+                if command.startswith("command content "):
+                    command = command[16:]
+                    controller_active_client[0].send(f"command length {str(cmd_length)}".encode(ENCODING))
+                    response = controller_active_client[0].recv(1024)
+                    if response == "command ok":
+                        controller_active_client[0].send(command.encode(ENCODING))
         else:
             if data == "exit":
                 connected = False
@@ -97,9 +99,9 @@ def handle_controller(conn, addr):
                         controller_active_client = client
                         break
                 if controller_active_client != ():
-                    conn.send("OK")
+                    conn.send("activate ok")
                 else:
-                    conn.send("NOT OK")
+                    conn.send("activate error")
 
 
 def handle_client(conn, addr):
@@ -112,7 +114,21 @@ def handle_client(conn, addr):
             connected = False
             conn.close()
             clients.remove((conn, addr))
-        
+        if data.startswith("tell length "):
+            try:
+                length = int(data[12:])
+            except ValueError as e:
+                conn.send("tell error".encode(ENCODING))
+                continue
+            conn.send("tell ok")
+            message = conn.recv(length).decode(ENCODING)
+            if message.startswith("tell content "):
+                message = message[13:]
+                controller.send(f"tell length {length}")
+                response = controller.recv(1024)
+                if response == "tell ok":
+                    controller.send(message)
+
 
 
 running = True
