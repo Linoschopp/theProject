@@ -1,7 +1,8 @@
+#! /usr/bin/python3
 import socket
 import sys
+import pyautogui
 
-# import pyautogui
 
 IP = "127.0.0.1"
 PORT = 8888
