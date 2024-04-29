@@ -24,7 +24,7 @@ def display(text=None):
 		half = (os.get_terminal_size().columns-20)/2
 		print(math.ceil(half)*" "+"Connected Controller"+math.floor(half)*" ")
 		print("\x1b[27m", end="")
-		height1 = math.floor((os.get_terminal_size().lines - 2)/ 8 * 7)
+		height1 = math.floor((os.get_terminal_size().lines - 2)/ 5 * 4)
 		height2 = os.get_terminal_size().lines - 2 - height1
 		out_lines = out_data.split("\n")
 		out_out_lines = out_lines[-height1:]
@@ -37,7 +37,7 @@ def display(text=None):
 			print()
 		print_line()
 		if text:
-			lines = out_data.split("\n")
+			lines = text.split("\n")
 			o_lines = out_lines[-height1:]
 			for line in o_lines:
 				print(line)
