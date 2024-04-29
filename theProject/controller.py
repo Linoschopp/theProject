@@ -21,8 +21,8 @@ def display(text=None):
 		print("\x1b[1004l", end="")
 		print("\x1b[2J", end="")
 		print("\x1b[7m", end="")
-		half = (os.get_terminal_size().columns-18)/2
-		print(math.ceil(half)*" "+"Active  Controller"+math.floor(half)*" ")
+		half = (os.get_terminal_size().columns-20)/2
+		print(math.ceil(half)*" "+"Connected Controller"+math.floor(half)*" ")
 		print("\x1b[27m", end="")
 		height1 = math.floor((os.get_terminal_size().lines - 2)/ 8 * 7)
 		height2 = os.get_terminal_size().lines - 2 - height1
@@ -48,8 +48,8 @@ def display(text=None):
 		print("\x1b[1004l", end="")
 		print("\x1b[2J", end="")
 		print("\x1b[7m", end="")
-		half = (os.get_terminal_size().columns-20)/2
-		print(math.ceil(half)*" "+"Inactive  Controller"+math.floor(half)*" ")
+		half = (os.get_terminal_size().columns-24)/2
+		print(math.ceil(half)*" "+"Not Connected Controller"+math.floor(half)*" ")
 		print("\x1b[27m", end="")
 		
 def recieve_output():
@@ -73,29 +73,42 @@ while True:
 		break
 	except ConnectionRefusedError as e:
 		pass
-		
-print("Connected")
 
-out_data = ""
-running = True
-active = False
-while running:
-	if active:
+controller.send("type: controller".encode(ENCODING))
+if controller.recv(64).decode(ENCODING) == "type ok":
+
+	print("Connected")
+	
+	out_data = ""
+	running = True
+	active = False
+	while running:
 		try:
-			height = display()
-			text = StringIO()
-			send = False
-			while True:
-				inp = input()
-				if len(text.getvalue().split("\n")) >= 1:
-					if text.getvalue().split("\n")[-1].strip() == "" and inp == "":
-						break
-				text.write(inp+"\n")
-				display(text)
-			if not ":cancel:" in text.getvalue():
-				controller.send(f"command length {len(text.getvalue().encode(ENCODING))}".encode(ENCODING))
-				if controller.recv(1024) == "command ok":
-					controller.send(f"command content {text.getvalue()}".encode(ENCODING))
+			if active:
+				height = display()
+				text = StringIO()
+				send = False
+				while True:
+					inp = input()
+					if len(text.getvalue().split("\n")) >= 1:
+						if text.getvalue().split("\n")[-1].strip() == "" and inp == "":
+							break
+					text.write(inp+"\n")
+					display(text)
+				if text.getvalue() == ":active exit:":
+					controller.send("active exit".encode(ENCODING))
+					active = False
+				elif not ":cancel:" in text.getvalue():
+					controller.send(f"command length {len(text.getvalue().encode(ENCODING))}".encode(ENCODING))
+					if controller.recv(1024).decode(ENCODING) == "command ok":
+						controller.send(f"command content {text.getvalue()}".encode(ENCODING))
+			else:
+				display()
+				inp = input("")			
+				controller.send(f"activate {inp}".encode(ENCODING))	
+				if controller.recv(1024).decode(ENCODING) == "activate ok":
+					active = True
+					
 				
 					
 		except EOFError:
